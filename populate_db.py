@@ -68,7 +68,7 @@ def join_tables():
     con.close()
 
 
-populate_driver_ids()
-populate_ride_timestamps()
-populate_ride_ids()
-join_tables()
+#populate_driver_ids()
+#populate_ride_timestamps()
+#populate_ride_ids()
+#join_tables()
