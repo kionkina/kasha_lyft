@@ -12,6 +12,7 @@ def most_recent_entry():
 
 #assigning MOST RECENT DATATIME ENTRY IN DATA SET to MOST_RECENT variable
 MOST_RECENT = most_recent_entry()
+#print MOST_RECENT
 
 
 #returns number of days between most recent entry and given time
@@ -25,6 +26,11 @@ def td2(t1, t2):
     d1 = datetime.strptime(t1, "%Y-%m-%d %H:%M:%S")
     d2 = datetime.strptime(t2, "%Y-%m-%d %H:%M:%S")
     return(d1 - d2).days
+
+def seconds_elapsed(t1, t2):
+    d1 = datetime.strptime(t1, "%Y-%m-%d %H:%M:%S")
+    d2 = datetime.strptime(t2, "%Y-%m-%d %H:%M:%S")
+    return(d1 - d2).seconds
 
 
 #get most recent timestamp of a driver
@@ -69,10 +75,21 @@ def all_recent_rides():
     '''
     return all_differences
 
+def driver_first_ride(driver_id):
+    con = sqlite3.connect("lyft.db")
+    cur = con.cursor()
+    command = "SELECT min(timestamp) FROM driver_rides WHERE driver_id=? AND event='picked_up_at' "
+    ret = cur.execute(command, (str(driver_id),)).fetchone()
+    con.commit()
+    con.close()
+    return ret[0]
+
 
 #returns array of days driver has been with Lyft since onboarding -- up to driver's lastest entry 
+#returns array of days driver has been with Lyft since onboarding -- up to driver's lastest entry 
 def driver_total_days():
-    days = []
+    #days = []
+    dict1 = {}
     con = sqlite3.connect("lyft.db")
     cur = con.cursor()
     command = "SELECT driver_id FROM driver_ids"
@@ -84,12 +101,17 @@ def driver_total_days():
         onboard_date = cur.execute(command).fetchall()[0]
      
         #adding number of days prior to last entry to list "all_differences"
-        if (recent_ride != None and onboard_date != None):
-            difference = int(td2(recent_ride, onboard_date[0]))
-            days.append(difference)
+        if (recent_ride != None):
+            if(onboard_date == None):
+                difference = int(td2(recent_ride, driver_first_ride(str(driver_id[0]))))
+            else:
+                difference = int(td2(recent_ride, onboard_date[0]))
+            dict1[driver_id[0]] = difference
+            #days.append(difference)
     con.commit()
     con.close()
-    return days
+    return dict1
+    #return days
 
 #print driver_total_days()
 
@@ -106,5 +128,40 @@ with open('retention.csv', 'w') as f:
     for key in retention.keys():
         f.write("%s,%s\n"%(key,retention[key]))
 '''
+
+
+def avg_acceptance_time():
+    con = sqlite3.connect("lyft.db")
+    cur = con.cursor()
+    command = "SELECT driver_id FROM driver_ids"
+    driver_ids = cur.execute(command).fetchall()
+    acceptance_time = []
+    dic = {}
+    for driver_id in driver_ids:
+        driver_id = driver_id[0]
+        command = "SELECT rowid, timestamp FROM driver_rides WHERE driver_id=? AND event='accepted_at'"
+        #(rowid, accepted timestamp) list per driver
+        result = cur.execute(command, (driver_id,)).fetchall()
+        dur_sum = 0
+        if (result != []):
+            #each (rowid, accepted timestamp) item
+            for res in result:
+                row = res[0]
+                accepted_at = res[1]
+                command = "SELECT timestamp FROM driver_rides WHERE rowid=?"
+                requested_row = int(row)+4
+                requested_at = cur.execute(command, (requested_row,)).fetchone()[0]
+                acceptance_time.append(seconds_elapsed(accepted_at, requested_at))
+                #dur_sum += seconds_elapsed(accepted_at, requested_at)
+        #if (result != []):
+            #dic[driver_id] = dur_sum
+    con.commit()
+    con.close()
+    return acceptance_time
+
+#print avg_acceptance_time()
+    
+    
+    
 
     

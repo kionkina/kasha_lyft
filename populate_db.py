@@ -2,20 +2,20 @@ import csv, sqlite3
 
 #create lyft.db 
 
-def populate_driver_ids():
+def populate_ride_ids():
     con = sqlite3.connect("lyft.db")
     cur = con.cursor()
-    cur.execute("CREATE TABLE IF NOT EXISTS  driver_ids (driver_id, driver_onboard_date);") # use your column names here
-
-    with open('driver_ids.csv','rb') as fin: # `with` statement available in 2.5+
+    cur.execute("CREATE TABLE IF NOT EXISTS ride_ids (driver_id, ride_id, ride_distance, ride_duration, ride_prime_time);")
+    with open('ride_ids.csv','rb') as fin: # with statement available in 2.5+
         # csv.DictReader uses first line in file for column headings by default
         dr = csv.DictReader(fin) # comma is default delimiter
-        to_db = [(i['driver_id'], i['driver_onboard_date']) for i in dr]
+        to_db = [(i['driver_id'], i['ride_id'], i['ride_distance'], i['ride_duration'],i['ride_prime_time']) for i in dr]
 
-    cur.executemany("INSERT INTO driver_ids (driver_id, driver_onboard_date) VALUES (?, ?);", to_db)
+    print(to_db[0])   
+
+    cur.executemany("INSERT INTO ride_ids (driver_id, ride_id, ride_distance, ride_duration, ride_prime_time) VALUES (?, ?, ?, ?, ?);", to_db)
     con.commit()
     con.close()
-
 
 def populate_ride_timestamps():
     con = sqlite3.connect("lyft.db")
@@ -36,15 +36,15 @@ def populate_ride_timestamps():
 def populate_ride_ids():
     con = sqlite3.connect("lyft.db")
     cur = con.cursor()
-    cur.execute("CREATE TABLE IF NOT EXISTS ride_ids (driver_id, ride_id);")
-    with open('ride_ids.csv','rb') as fin: # `with` statement available in 2.5+
+    cur.execute("CREATE TABLE IF NOT EXISTS ride_ids (driver_id, ride_id, ride_distance, ride_duration, ride_prime_time);")
+    with open('ride_ids.csv','rb') as fin: # with statement available in 2.5+
         # csv.DictReader uses first line in file for column headings by default
         dr = csv.DictReader(fin) # comma is default delimiter
-        to_db = [(i['driver_id'], i['ride_id']) for i in dr]
+        to_db = [(i['driver_id'], i['ride_id'], i['ride_distance'], i['ride_duration'],i['ride_prime_time']) for i in dr]
 
     print(to_db[0])   
 
-    cur.executemany("INSERT INTO ride_ids (driver_id, ride_id) VALUES (?, ?);", to_db)
+    cur.executemany("INSERT INTO ride_ids (driver_id, ride_id, ride_distance, ride_duration, ride_prime_time) VALUES (?, ?, ?, ?, ?);", to_db)
     con.commit()
     con.close()
 
@@ -70,5 +70,5 @@ def join_tables():
 
 #populate_driver_ids()
 #populate_ride_timestamps()
-#populate_ride_ids()
+populate_ride_ids()
 #join_tables()
