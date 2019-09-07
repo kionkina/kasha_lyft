@@ -10,9 +10,8 @@ def most_recent_entry():
     con.close()
     return ret[0]
 
-print "MOST RECENT ENTRY IN DATA SET: "
+#assigning MOST RECENT DATATIME ENTRY IN DATA SET to MOST_RECENT variable
 MOST_RECENT = most_recent_entry()
-print MOST_RECENT
 
 
 #returns number of days between most recent entry and given time
@@ -21,36 +20,14 @@ def time_difference(time):
     d2 = datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
     return(d1 - d2).days
 
-
+#serves the same purpose as time_difference
 def td2(t1, t2):
     d1 = datetime.strptime(t1, "%Y-%m-%d %H:%M:%S")
     d2 = datetime.strptime(t2, "%Y-%m-%d %H:%M:%S")
     return(d1 - d2).days
 
 
-#CREATED DRIVER_RIDES TABLE
-def join_tables():
-    con = sqlite3.connect("lyft.db")
-    cur = con.cursor()
-    command = '''SELECT driver_id, event, timestamp
-                 FROM ride_ids d
-                 LEFT JOIN ride_timestamps rt
-                 ON d.ride_id = rt.ride_id
-             '''
-    #generates dataset: (driver_id, event, timestamp)
-    result = cur.execute(command).fetchall()
-    cur.execute("CREATE TABLE IF NOT EXISTS  driver_rides (driver_id, event, timestamp);")
-    for res in result:
-        to_db = (res[0], res[1], res[2])
-        cur.execute("INSERT INTO driver_rides (driver_id, event, timestamp) VALUES(?, ?, ?)", to_db)
-    print("done")
-    con.commit()
-    con.close()
-
-#join_tables()
-
-
-#GET MOST RECENT RIDE
+#get most recent timestamp of a driver
 def driver_recent_ride(driver_id):
     con = sqlite3.connect("lyft.db")
     cur = con.cursor()
@@ -60,8 +37,7 @@ def driver_recent_ride(driver_id):
     con.close()
     return ret[0]
 
-
-#returns array of differences between driver's most recent ride and date of latest entry
+#returns array of driver employment duration up to date of latest entry
 def all_recent_rides():
     con = sqlite3.connect("lyft.db")
     cur = con.cursor()
@@ -77,7 +53,10 @@ def all_recent_rides():
         if (recent_ride != None):
             difference = int(time_difference(recent_ride))
             all_differences.append(difference)
-    #creating dictionary to store frequences of days prior to last entry
+    '''
+    this creates a dictionary to store frequences of days prior to last entry
+    but using a set(array) of values was easier for observing data
+    
     retention = {}
     print "MAX NUM ="
     print all_differences
@@ -87,13 +66,13 @@ def all_recent_rides():
             retention[days] = retention[days]+1
         else:
             retention[days] = 1
-    return retention
+    '''
+    return all_differences
 
 
 #returns array of days driver has been with Lyft since onboarding -- up to driver's lastest entry 
 def driver_total_days():
     days = []
-    
     con = sqlite3.connect("lyft.db")
     cur = con.cursor()
     command = "SELECT driver_id FROM driver_ids"
@@ -112,7 +91,7 @@ def driver_total_days():
     con.close()
     return days
 
-#driver_total_days()
+#print driver_total_days()
 
 #RUNNING all_recent_rides() to create retention.csv file
 

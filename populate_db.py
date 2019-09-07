@@ -48,6 +48,27 @@ def populate_ride_ids():
     con.commit()
     con.close()
 
+#CREATES DRIVER_RIDES TABLE
+def join_tables():
+    con = sqlite3.connect("lyft.db")
+    cur = con.cursor()
+    command = '''SELECT driver_id, event, timestamp
+                 FROM ride_ids d
+                 LEFT JOIN ride_timestamps rt
+                 ON d.ride_id = rt.ride_id
+             '''
+    #generates dataset: (driver_id, event, timestamp)
+    result = cur.execute(command).fetchall()
+    cur.execute("CREATE TABLE IF NOT EXISTS  driver_rides (driver_id, event, timestamp);")
+    for res in result:
+        to_db = (res[0], res[1], res[2])
+        cur.execute("INSERT INTO driver_rides (driver_id, event, timestamp) VALUES(?, ?, ?)", to_db)
+    print("done")
+    con.commit()
+    con.close()
+
+
 populate_driver_ids()
 populate_ride_timestamps()
 populate_ride_ids()
+join_tables()
